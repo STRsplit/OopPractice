@@ -217,22 +217,3 @@ class Player {
   }
 }
 
-let player1 = new Player('steve')
-let player2 = new Player('twan')
-let ourGame = new Game(player1, player2);
-// ourGame.handleTurn('hit')
-
-let x = ourGame.players.map(player => player.hand)
-console.log(ourGame)
-console.log(ourGame.players, x)
-ourGame.handleTurn('hit')
-console.log(ourGame.players)
-ourGame.handleTurn('hit')
-ourGame.handleTurn('hit')
-
-
-// ourGame.handleTurn('hit')
-// console.log(ourGame.currentPlayer);
-// console.log(ourGame.players)
-// ourGame.handleTurn('stand')
-// console.log(ourGame)
