@@ -15,7 +15,7 @@ class Cards {
       'J': { score: 10 },
       'Q': { score: 10 },
       'K': { score: 10 },
-      'A': { score: 11 }
+      'A': { score: 1 }
     },
     this.suits = ['hearts', 'spades', 'clubs', 'diamonds'],
     this.deck = [];
