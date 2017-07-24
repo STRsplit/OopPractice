@@ -1,30 +1,4 @@
-//Make a blackjack game using object orientend programming
-
-/* Plan
-- Game class
-  - Take in player names or player obj
-  - Dealer player
-  - Curr player (turn)
-
-  Methods:
-  - shuffle cards
-  - deal cards
-  - check player cards
-  - checkwin
-
-
-- Players class
-  - player has current hand
-  Methods:
-  - actions:
-    - hit: deal card from deck
-    - stand: next player
-  - calculate cards
-    - store current score?
-  - check player
-    - if cards are bust clear player
-
-*/
+/* Make a blackjack game using object orientend programming */
 
 class Cards {
   constructor(){
