@@ -1,59 +1,65 @@
 /* Make a blackjack game using object orientend programming */
 
-class Cards {
-  constructor(){
-    this.values = {
-      '2': { score: 2 },
-      '3': { score: 3 },
-      '4': { score: 4 },
-      '5': { score: 5 },
-      '6': { score: 6 },
-      '7': { score: 7 },
-      '8': { score: 8 },
-      '9': { score: 9 },
-      '10': { score: 10 },
-      'J': { score: 10 },
-      'Q': { score: 10 },
-      'K': { score: 10 },
-      'A': { score: 1 }
-    },
-    this.suits = ['hearts', 'spades', 'clubs', 'diamonds'],
-    this.deck = [];
-    this.createDeck();
-  }
-  createDeck() {
+const createDeck = ({values, suits}) => {
     let newDeck = [];
-    for(let i = 0; i < this.suits.length; i++){
-      let suit = this.suits[i];
-      for(let key in this.values){
-        let cardItem = Object.assign({}, this.values[key], {
-          suit: suit,
-          card: key,
+    for(let i = 0; i < suits.length; i++){
+      let suit = suits[i];
+      for(let card in values){
+        let cardItem = Object.assign({}, values[card], {
+          suit,
+          card
         })
         newDeck.push(cardItem)
       }
     }
-    this.shuffleDeck(newDeck)
+    return shuffleDeck(newDeck)
   }
-  shuffleDeck(cards) {
-    let shuffledDeck = cards.slice();
-
-    for(let x = 0; x < shuffledDeck.length; x++){
-      let currCard = shuffledDeck[x];
-      let randomInd = Math.floor(Math.random() * shuffledDeck.length);
-      let randomCard = shuffledDeck[randomInd];
-      shuffledDeck[x] = randomCard;
-      shuffledDeck[randomInd] = currCard;
+const shuffleDeck = deck => {
+    let shuffledDeck = deck.slice();
+    for (let i = deck.length - 1; i > 0; i--){
+      let n = Math.floor(Math.random() * i) + 1;
+      let currCard = shuffledDeck[i];
+      shuffledDeck[i] = shuffledDeck[n];
+      shuffledDeck[n] = currCard;
     }
-    this.deck = shuffledDeck;
-    return this.deck;
+    return shuffledDeck;
+}
+const getDeck = () => {
+  return createDeck(cards)
+}
+const cards = {
+  values: {
+    '2': { score: 2 },
+    '3': { score: 3 },
+    '4': { score: 4 },
+    '5': { score: 5 },
+    '6': { score: 6 },
+    '7': { score: 7 },
+    '8': { score: 8 },
+    '9': { score: 9 },
+    '10': { score: 10 },
+    'J': { score: 10 },
+    'Q': { score: 10 },
+    'K': { score: 10 },
+    'A': { score: 1 }
+  },
+  suits: ['hearts', 'spades', 'clubs', 'diamonds']
+}
+
+const gameStats = {
+  results: [],
+  game: 0,
+  addWinner: function(winners){
+    this.game++;
+    this.results.push({game: this.game, winners})
   }
 }
+  
 class Game {
   constructor(...players){
     this.players = [...players].concat(new Player('dealer'));
     this.dealer = this.players[this.players.length - 1];
-    this.cards = new Cards().deck;
+    this.cards = createDeck()
     this.currentPosition = 0;
     this.blackJacks = []
     this.currentPlayer = this.players[this.currentPosition];
@@ -62,16 +68,17 @@ class Game {
   }
 
   checkForBlackJack(){
-    let blackJacks = this.players.filter(player => {
-      return player.score === 21
-    })
-    if(blackJacks.length){
-      if(blackJacks.includes(this.dealer)){
-        this.calculateGame(this.dealer);
-      } else {
-        this.players = blackJacks.map(player => player.hasBlackJack = true)
-        this.blackJacks = blackJacks;
-      }
+    if(this.dealer.score === 21){
+      this.calculateGame(this.dealer)
+    } else {
+      this.players = this.players.filter(player => {
+        if(player.score === 21){
+          player.hasBlackJack = true;
+          this.blackJacks.push(player)
+        } else {
+          return player;
+        }
+      })
     }
   }
   dealPlayers(){
@@ -79,27 +86,22 @@ class Game {
     while(cardsDealt < 2){
       cardsDealt++;
       this.players.forEach(player => {
-        player.hand.push(this.cards[0]);
+        let card = this.cards.pop()
+        player.hand.push(card);
         player.getScore();
-        this.cards = this.cards.slice(1);
       })
     }
     this.checkForBlackJack();
   }
   handleHit () {
-    this.currentPlayer.addCard(this.cards[0]);
-    this.cards = this.cards.slice(1);
+    let card = this.cards.pop()
+    this.currentPlayer.addCard(card);
   }
   handleTurn(action){
-    if(this.blackJacks.includes(this.currentPlayer)){
-      this.currentPosition++;
-      this.currentPlayer = this.players[this.currentPosition]
-    }
     if(action === 'stand'){
       this.currentPosition++;
       if(this.currentPosition === this.players.length){
-        this.calculateGame()
-        return;
+        return this.calculateGame();
       } else {
         this.currentPlayer = this.players[this.currentPosition];
       }
@@ -108,22 +110,15 @@ class Game {
       this.handleHit()
       if(!this.currentPlayer.checkCards()){
         if(this.currentPlayer === this.dealer){
-          this.calculateGame()
-        } else if(this.currentPosition === this.players.length){
-          this.calculateGame()
-          return;
+          return this.calculateGame()
         }
-        else {
           this.currentPosition++;
           this.currentPlayer = this.players[this.currentPosition]
-        }
-      } else if(this.currentPlayer.score > 17){
+      } 
+      if(this.currentPlayer.score > 17){
         this.currentPosition++;
-        this.currentPlayer = this.players[this.currentPosition]
       }
-      else {
-          this.currentPlayer = this.players[this.currentPosition]
-      }
+      this.currentPlayer = this.players[this.currentPosition];
     }
   }
   getWinners() {
@@ -144,16 +139,15 @@ class Game {
   }
   calculateGame(dealer){
     if(dealer){
-      console.log('you all lose, dealer wins', this.dealer.score)
       return;
     }
     this.winners = this.getWinners();
-    console.log(this.winners);
   }
 }
 class Player {
-  constructor(name){
+  constructor(name, buyin = 20){
     this.name = name;
+    this.purse = buyin;
     this.hand = [];
     this.score = 0;
     this.status = true;
