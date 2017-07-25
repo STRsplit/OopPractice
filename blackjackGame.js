@@ -1,33 +1,4 @@
-/* Make a blackjack game using object orientend programming */
-
-const createDeck = ({values, suits}) => {
-    let newDeck = [];
-    for(let i = 0; i < suits.length; i++){
-      let suit = suits[i];
-      for(let card in values){
-        let cardItem = Object.assign({}, values[card], {
-          suit,
-          card
-        })
-        newDeck.push(cardItem)
-      }
-    }
-    return shuffleDeck(newDeck)
-  }
-const shuffleDeck = deck => {
-    let shuffledDeck = deck.slice();
-    for (let i = deck.length - 1; i > 0; i--){
-      let n = Math.floor(Math.random() * i) + 1;
-      let currCard = shuffledDeck[i];
-      shuffledDeck[i] = shuffledDeck[n];
-      shuffledDeck[n] = currCard;
-    }
-    return shuffledDeck;
-}
-const getDeck = () => {
-  return createDeck(cards)
-}
-const cards = {
+const gameCards = {
   values: {
     '2': { score: 2 },
     '3': { score: 3 },
@@ -45,6 +16,35 @@ const cards = {
   },
   suits: ['hearts', 'spades', 'clubs', 'diamonds']
 }
+/* Make a blackjack game using object orientend programming */
+
+const createDeck = ({values, suits}) => {
+    let newDeck = [];
+    for(let i = 0; i < suits.length; i++){
+      let suit = suits[i];
+      for(let card in values){
+        let cardItem = Object.assign({}, values[card], {
+          suit,
+          card
+        })
+        newDeck.push(cardItem)
+      }
+    }
+    return shuffleDeck(newDeck);
+  }
+const shuffleDeck = deck => {
+    let shuffledDeck = deck.slice();
+    for (let i = deck.length - 1; i > 0; i--){
+      let n = Math.floor(Math.random() * (1 + i));
+      let currCard = shuffledDeck[i];
+      shuffledDeck[i] = shuffledDeck[n];
+      shuffledDeck[n] = currCard;
+    }
+    return shuffledDeck;
+}
+const getDeck = (deck) => {
+  return createDeck(deck);
+}
 
 const gameStats = {
   results: [],
@@ -59,9 +59,9 @@ class Game {
   constructor(...players){
     this.players = [...players].concat(new Player('dealer'));
     this.dealer = this.players[this.players.length - 1];
-    this.cards = createDeck()
+    this.cards = createDeck(gameCards)
     this.currentPosition = 0;
-    this.blackJacks = []
+    this.blackJacks = [];
     this.currentPlayer = this.players[this.currentPosition];
     this.winners = [];
     this.dealPlayers();
@@ -86,15 +86,15 @@ class Game {
     while(cardsDealt < 2){
       cardsDealt++;
       this.players.forEach(player => {
-        let card = this.cards.pop()
-        player.hand.push(card);
+        let card = this.cards.pop();
+        player.addCard(card);
         player.getScore();
       })
     }
     this.checkForBlackJack();
   }
   handleHit () {
-    let card = this.cards.pop()
+    let card = this.cards.pop();
     this.currentPlayer.addCard(card);
   }
   handleTurn(action){
@@ -110,7 +110,7 @@ class Game {
       this.handleHit()
       if(!this.currentPlayer.checkCards()){
         if(this.currentPlayer === this.dealer){
-          return this.calculateGame()
+          return this.calculateGame();
         }
           this.currentPosition++;
           this.currentPlayer = this.players[this.currentPosition]
@@ -122,7 +122,6 @@ class Game {
     }
   }
   getWinners() {
-
     let winners = this.players.filter(player => {
       return player.status;
     })
@@ -139,9 +138,10 @@ class Game {
   }
   calculateGame(dealer){
     if(dealer){
-      return;
+      gameStats.addWinner(this.dealer)
     }
     this.winners = this.getWinners();
+    gameStats.addWinner(this.winners);
   }
 }
 class Player {
@@ -153,29 +153,21 @@ class Player {
     this.status = true;
     this.hasBlackJack = false;
   }
-  handleAce(score) {
-    let betterScore = score;
-    for(let i = 0; i < this.hand.length; i++){
-      let currCard = this.hand[i];
-      if(currCard.card === 'A'){
-        betterScore += 10;
-      }
-    }
-    if(betterScore > score && betterScore <= 21){
-      return betterScore;
-    }
-    return score;
-  }
-  getScore(){
-    let score = 0;
-    this.hand.forEach(card => {
-      score += card.score;
-    })
-    this.score = this.handleAce(score);
-  }
-  addCard(card) {
-    this.hand.push(card)
-  }
+
+  handleAce(card) {
+    return this.score <= 10 ? Object.assign(card, { score: 11 }) : card;
+  }
+
+  getScore(){
+    return this.score;
+  }
+  
+  addCard(card) {
+    let finalCard = card.card === 'A' ? this.handleAce(card) : card;
+    this.score += finalCard.score;
+    this.hand.push(finalCard);
+  }
+
   checkCards(){
     this.getScore();
     if(this.score > 21){
@@ -184,4 +176,3 @@ class Player {
     return this.status;
   }
 }
-
